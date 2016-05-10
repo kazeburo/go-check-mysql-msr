@@ -17,8 +17,8 @@ Application Options:
   -p, --port=     Port (3306)
   -u, --user=     Username (root)
   -P, --password= Password
-  -c, --critical= critical if uptime seconds is less than this number
-  -w, --warning=  warning if uptime seconds is less than this number
+  -c, --critical= critical if seconds behind master is larger than this number
+  -w, --warning=  warning if seconds behind master is larger than this number
 
 Help Options:
   -h, --help      Show this help message

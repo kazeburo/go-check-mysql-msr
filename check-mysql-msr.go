@@ -19,8 +19,8 @@ type mysqlSetting struct {
 
 type connectionOpts struct {
 	mysqlSetting
-	Crit int64 `short:"c" long:"critical" description:"critical if uptime seconds is less than this number"`
-	Warn int64 `short:"w" long:"warning" description:"warning if uptime seconds is less than this number"`
+	Crit int64 `short:"c" long:"critical" description:"critical if seconds behind master is larger than this number"`
+	Warn int64 `short:"w" long:"warning" description:"warning if seconds behind master is larger than this number"`
 }
 
 func main() {
