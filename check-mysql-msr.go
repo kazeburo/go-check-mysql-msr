@@ -84,9 +84,9 @@ func checkMsr() *checkers.Checker {
 		if st == 0 {
 			okStatuses = append(okStatuses, msg)
 		} else if st == 1 {
-			warnStatuses = append(okStatuses, msg)
+			warnStatuses = append(warnStatuses, msg)
 		} else if st == 2 {
-			critStatuses = append(okStatuses, msg)
+			critStatuses = append(critStatuses, msg)
 		}
 	}
 
