@@ -1,4 +1,4 @@
-VERSION=0.0.2
+VERSION=0.0.3
 
 all: check-mysql-msr
 
@@ -26,7 +26,6 @@ clean:
 	rm -rf check-mysql-msr check-mysql-msr-*.tar.gz
 
 tag:
-    git tag v${VERSION}
-    git push origin v${VERSION}
-    git push origin master
-
+	git tag v${VERSION}
+	git push origin v${VERSION}
+	git push origin master
