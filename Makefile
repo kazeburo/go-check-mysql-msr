@@ -5,7 +5,10 @@ all: check-mysql-msr
 .PHONY: check-mysql-msr
 
 bundle:
-	dep ensucre
+	dep ensure
+
+update:
+	dep ensure -update
 
 check-mysql-msr: check-mysql-msr.go
 	go build $(LDFLAGS) -o check-mysql-msr
