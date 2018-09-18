@@ -4,23 +4,17 @@ all: check-mysql-msr
 
 .PHONY: check-mysql-msr
 
-gom:
-	go get -u github.com/mattn/gom
-
 bundle:
-	gom install
+	dep ensucre
 
 check-mysql-msr: check-mysql-msr.go
-	gom build -o check-mysql-msr
+	go build $(LDFLAGS) -o check-mysql-msr
 
 linux: check-mysql-msr.go
-	GOOS=linux GOARCH=amd64 gom build -o check-mysql-msr
+	GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o check-mysql-msr
 
 fmt:
 	go fmt ./...
-
-dist:
-	git archive --format tgz HEAD -o check-mysql-msr-$(VERSION).tar.gz --prefix check-mysql-msr-$(VERSION)/
 
 clean:
 	rm -rf check-mysql-msr check-mysql-msr-*.tar.gz

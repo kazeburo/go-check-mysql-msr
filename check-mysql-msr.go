@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/mackerelio/checkers"
 	"github.com/ziutek/mymysql/mysql"
 	_ "github.com/ziutek/mymysql/native"
-	"os"
 )
 
 type mysqlSetting struct {
@@ -49,7 +50,7 @@ func checkMsr() *checkers.Checker {
 	var critStatuses []string
 	rows, _, err := db.Query("SELECT CHANNEL_NAME FROM performance_schema.replication_connection_status")
 	if err != nil {
-		return checkers.Unknown(fmt.Sprintf("couldn't execute query: %s",err))
+		return checkers.Unknown(fmt.Sprintf("couldn't execute query: %s", err))
 	}
 
 	if len(rows) == 0 {
@@ -58,7 +59,7 @@ func checkMsr() *checkers.Checker {
 
 	for _, row := range rows {
 		channelName := row.Str(0)
-		query := fmt.Sprintf("SHOW SLAVE STATUS FOR CHANNEL '%s'",channelName)
+		query := fmt.Sprintf("SHOW SLAVE STATUS FOR CHANNEL '%s'", channelName)
 		slaveRows, slaveRes, err := db.Query(query)
 		if err != nil {
 			return checkers.Unknown("couldn't execute query")
@@ -67,12 +68,12 @@ func checkMsr() *checkers.Checker {
 		idxIoThreadRunning := slaveRes.Map("Slave_IO_Running")
 		idxSQLThreadRunning := slaveRes.Map("Slave_SQL_Running")
 		idxSecondsBehindMaster := slaveRes.Map("Seconds_Behind_Master")
-	    ioThreadStatus := slaveRows[0].Str(idxIoThreadRunning)
+		ioThreadStatus := slaveRows[0].Str(idxIoThreadRunning)
 		sqlThreadStatus := slaveRows[0].Str(idxSQLThreadRunning)
 		secondsBehindMaster := slaveRows[0].Int64(idxSecondsBehindMaster)
 
 		st := 0
-		if ioThreadStatus == "No" || sqlThreadStatus == "No" {
+		if ioThreadStatus != "Yes" || sqlThreadStatus != "Yes" {
 			st = 2
 		}
 		if opts.Crit > 0 && secondsBehindMaster > opts.Crit {
@@ -80,7 +81,7 @@ func checkMsr() *checkers.Checker {
 		} else if opts.Warn > 0 && secondsBehindMaster > opts.Warn {
 			st = 1
 		}
-		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d",channelName, ioThreadStatus, sqlThreadStatus, secondsBehindMaster)
+		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", channelName, ioThreadStatus, sqlThreadStatus, secondsBehindMaster)
 		if st == 0 {
 			okStatuses = append(okStatuses, msg)
 		} else if st == 1 {
@@ -92,15 +93,15 @@ func checkMsr() *checkers.Checker {
 
 	var msgs []string
 	if len(critStatuses) > 0 {
-		msgs = append(msgs, "[C]"+strings.Join(critStatuses[0:]," "))
+		msgs = append(msgs, "[C]"+strings.Join(critStatuses[0:], " "))
 	}
 	if len(warnStatuses) > 0 {
-		msgs = append(msgs, "[W]"+strings.Join(warnStatuses[0:]," "))
+		msgs = append(msgs, "[W]"+strings.Join(warnStatuses[0:], " "))
 	}
 	if len(okStatuses) > 0 {
-		msgs = append(msgs, "[O]"+strings.Join(okStatuses[0:]," "))
+		msgs = append(msgs, "[O]"+strings.Join(okStatuses[0:], " "))
 	}
-	msg := strings.Join(msgs[0:]," | ")
+	msg := strings.Join(msgs[0:], " | ")
 	if len(critStatuses) > 0 {
 		return checkers.Critical(msg)
 	} else if len(warnStatuses) > 0 {
@@ -108,6 +109,3 @@ func checkMsr() *checkers.Checker {
 	}
 	return checkers.Ok(msg)
 }
-
-
-

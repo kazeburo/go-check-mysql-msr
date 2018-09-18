@@ -1,5 +1,0 @@
-gom "github.com/jessevdk/go-flags"
-gom "github.com/mackerelio/checkers"
-gom "github.com/ziutek/mymysql/mysql"
-gom "github.com/ziutek/mymysql/native"
-
