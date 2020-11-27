@@ -29,3 +29,6 @@ MySQL Multi Source Replication OK: [O]main-db=io:Yes,sql:Yes,behind:0 user-db=io
 ```
 
 
+## Install
+
+Please download release page or `mkr plugin install kazeburo/go-check-mysql-msr`.
