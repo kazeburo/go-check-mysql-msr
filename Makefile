@@ -1,14 +1,10 @@
 VERSION=0.0.5
+LDFLAGS=-ldflags "-w -s -X main.version=${VERSION}"
+GO111MODULE=on
 
 all: check-mysql-msr
 
 .PHONY: check-mysql-msr
-
-bundle:
-	dep ensure
-
-update:
-	dep ensure -update
 
 check-mysql-msr: check-mysql-msr.go
 	go build $(LDFLAGS) -o check-mysql-msr
@@ -20,7 +16,10 @@ fmt:
 	go fmt ./...
 
 clean:
-	rm -rf check-mysql-msr check-mysql-msr-*.tar.gz
+	rm -rf check-mysql-msr
+
+check:
+	go test ./...
 
 tag:
 	git tag v${VERSION}
