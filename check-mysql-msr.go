@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
@@ -11,11 +12,15 @@ import (
 	_ "github.com/ziutek/mymysql/native"
 )
 
+// Version by Makefile
+var version string
+
 type mysqlSetting struct {
-	Host string `short:"H" long:"host" default:"localhost" description:"Hostname"`
-	Port string `short:"p" long:"port" default:"3306" description:"Port"`
-	User string `short:"u" long:"user" default:"root" description:"Username"`
-	Pass string `short:"P" long:"password" default:"" description:"Password"`
+	Host    string `short:"H" long:"host" default:"localhost" description:"Hostname"`
+	Port    string `short:"p" long:"port" default:"3306" description:"Port"`
+	User    string `short:"u" long:"user" default:"root" description:"Username"`
+	Pass    string `short:"P" long:"password" default:"" description:"Password"`
+	Version bool   `short:"v" long:"version" description:"Show version"`
 }
 
 type connectionOpts struct {
@@ -30,11 +35,26 @@ func main() {
 	ckr.Exit()
 }
 
+func printVersion() {
+	fmt.Printf(`%s %s
+Compiler: %s %s
+`,
+		os.Args[0],
+		version,
+		runtime.Compiler,
+		runtime.Version())
+}
+
 func checkMsr() *checkers.Checker {
 	opts := connectionOpts{}
-	psr := flags.NewParser(&opts, flags.Default)
+	psr := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
 	_, err := psr.Parse()
+	if opts.Version {
+		printVersion()
+		os.Exit(0)
+	}
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
 
