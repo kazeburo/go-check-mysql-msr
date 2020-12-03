@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,12 +17,21 @@ import (
 // Version by Makefile
 var version string
 
-type Opts struct {
+type opts struct {
 	mysqlflags.MyOpts
 	Timeout time.Duration `long:"timeout" default:"5s" description:"Timeout to connect mysql"`
 	Crit    int64         `short:"c" long:"critical" description:"critical if seconds behind master is larger than this number"`
 	Warn    int64         `short:"w" long:"warning" description:"warning if seconds behind master is larger than this number"`
 	Version bool          `short:"v" long:"version" description:"Show version"`
+}
+
+type slave struct {
+	IORunning     bool    `mysqlvar:"Slave_IO_Running"`
+	SQLRunning    bool    `mysqlvar:"Slave_SQL_Running"`
+	IORunningStr  string  `mysqlvar:"Slave_IO_Running"`
+	SQLRunningStr string  `mysqlvar:"Slave_SQL_Running"`
+	ChannelName   *string `mysqlvar:"Channel_Name"`
+	Behind        int64   `mysqlvar:"Seconds_Behind_Master"`
 }
 
 func main() {
@@ -44,7 +51,7 @@ Compiler: %s %s
 }
 
 func checkMsr() *checkers.Checker {
-	opts := Opts{}
+	opts := opts{}
 	psr := flags.NewParser(&opts, flags.HelpFlag|flags.PassDoubleDash)
 	_, err := psr.Parse()
 	if opts.Version {
@@ -66,99 +73,14 @@ func checkMsr() *checkers.Checker {
 	defer cancel()
 	ch := make(chan error, 1)
 
-	var okStatuses []string
-	var warnStatuses []string
-	var critStatuses []string
+	var slaves []slave
 
 	go func() {
-		rows, e := db.Query("SHOW SLAVE STATUS")
+		e := mysqlflags.Query(db, "SHOW SLAVE STATUS").Scan(&slaves)
 		if e != nil {
 			ch <- e
 			return
 		}
-		defer rows.Close()
-
-		cols, e := rows.Columns()
-		if e != nil {
-			ch <- e
-			return
-		}
-		vals := make([]interface{}, len(cols))
-		idxSlaveIORunning := -1
-		idxSlaveSQLRunning := -1
-		idxChannelName := -1
-		idxSecondsBehindMaster := -1
-		for i, v := range cols {
-			vals[i] = new(sql.RawBytes)
-			if v == "Slave_IO_Running" {
-				idxSlaveIORunning = i
-			}
-			if v == "Slave_SQL_Running" {
-				idxSlaveSQLRunning = i
-			}
-			if v == "Channel_Name" {
-				idxChannelName = i
-			}
-			if v == "Seconds_Behind_Master" {
-				idxSecondsBehindMaster = i
-			}
-		}
-		if idxSlaveIORunning < 0 || idxSlaveSQLRunning < 0 || idxSecondsBehindMaster < 0 {
-			ch <- fmt.Errorf("Could not find Slave_IO_Running or Slave_SQL_Running or Seconds_Behind_Master in columns")
-			return
-		}
-
-		i := 0
-		for rows.Next() {
-			i++
-			e = rows.Scan(vals...)
-			if e != nil {
-				ch <- e
-				return
-			}
-			slaveIORunning := string(*vals[idxSlaveIORunning].(*sql.RawBytes))
-			slaveSQLRunning := string(*vals[idxSlaveSQLRunning].(*sql.RawBytes))
-			channelName := "-"
-			if idxChannelName >= 0 {
-				channelName = string(*vals[idxChannelName].(*sql.RawBytes))
-			}
-			strSecondsBehindMaster := string(*vals[idxSecondsBehindMaster].(*sql.RawBytes))
-			secondsBehindMaster, e := strconv.ParseInt(strSecondsBehindMaster, 10, 64)
-			if e != nil {
-				ch <- e
-				return
-			}
-
-			status := 0
-			if slaveIORunning != "Yes" || slaveSQLRunning != "Yes" {
-				status = 2
-			}
-			if opts.Crit > 0 && secondsBehindMaster > opts.Crit {
-				status = 2
-			} else if opts.Warn > 0 && secondsBehindMaster > opts.Warn {
-				status = 1
-			}
-
-			msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", channelName, slaveIORunning, slaveSQLRunning, secondsBehindMaster)
-			switch status {
-			case 0:
-				okStatuses = append(okStatuses, msg)
-			case 1:
-				warnStatuses = append(warnStatuses, msg)
-			case 2:
-				critStatuses = append(critStatuses, msg)
-			}
-		}
-		if err := rows.Err(); err != nil {
-			ch <- err
-			return
-		}
-
-		if i == 0 {
-			ch <- fmt.Errorf("No replication settings")
-			return
-		}
-
 		ch <- nil
 	}()
 
@@ -171,6 +93,40 @@ func checkMsr() *checkers.Checker {
 
 	if err != nil {
 		return checkers.Critical(fmt.Sprintf("%v", err))
+	}
+
+	if len(slaves) == 0 {
+		return checkers.Critical("No replication settings")
+	}
+
+	var okStatuses []string
+	var warnStatuses []string
+	var critStatuses []string
+
+	for _, slave := range slaves {
+		status := checkers.OK
+		if !slave.IORunning || !slave.SQLRunning {
+			status = checkers.CRITICAL
+		}
+		if opts.Crit > 0 && slave.Behind > opts.Crit {
+			status = checkers.CRITICAL
+		} else if opts.Warn > 0 && slave.Behind > opts.Warn {
+			status = checkers.WARNING
+		}
+
+		if slave.ChannelName == nil {
+			*slave.ChannelName = "-"
+		}
+
+		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", *slave.ChannelName, slave.IORunningStr, slave.SQLRunningStr, slave.Behind)
+		switch status {
+		case checkers.OK:
+			okStatuses = append(okStatuses, msg)
+		case checkers.WARNING:
+			warnStatuses = append(warnStatuses, msg)
+		case checkers.CRITICAL:
+			critStatuses = append(critStatuses, msg)
+		}
 	}
 
 	var msgs []string
