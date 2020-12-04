@@ -116,7 +116,7 @@ func checkMsr() *checkers.Checker {
 			*slave.ChannelName = "-"
 		}
 
-		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", *slave.ChannelName, slave.IORunning.String(), slave.SQLRunning.String(), slave.Behind)
+		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", *slave.ChannelName, slave.IORunning, slave.SQLRunning, slave.Behind)
 		switch status {
 		case checkers.OK:
 			okStatuses = append(okStatuses, msg)

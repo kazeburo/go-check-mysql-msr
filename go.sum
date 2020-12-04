@@ -10,10 +10,8 @@ github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gG
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/jessevdk/go-flags v1.4.0 h1:4IU2WS7AumrZ/40jfhf4QVDMsQwqA7VEHozFRrGARJA=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
-github.com/kazeburo/go-mysqlflags v0.0.8 h1:Zq9mkWdj1BAF6gh6c4Stij5yDcvolT5p+ZnuI/YvEhY=
-github.com/kazeburo/go-mysqlflags v0.0.8/go.mod h1:gsOl/kRxa2B6QN7uzJE4ALNUAZ60rvg2qnizD4n5QBQ=
-github.com/kazeburo/go-mysqlflags v0.0.9 h1:CdrQzbxxiLe7J6Zun3E96Dg4ojXrCBALjW0AuxC9u2k=
-github.com/kazeburo/go-mysqlflags v0.0.9/go.mod h1:gsOl/kRxa2B6QN7uzJE4ALNUAZ60rvg2qnizD4n5QBQ=
+github.com/kazeburo/go-mysqlflags v0.0.10 h1:mmPM4vjvjJs4xluco1D2xQx+QKkZbr4ahOIE80tIfSo=
+github.com/kazeburo/go-mysqlflags v0.0.10/go.mod h1:gsOl/kRxa2B6QN7uzJE4ALNUAZ60rvg2qnizD4n5QBQ=
 github.com/kazeburo/mapstructure v1.4.1-0.20201203072126-37c8c6bbc6a6 h1:bA0GvgNDMyeV6P1ZoWEU2zYKnDeaLsSUts62JT+l+qk=
 github.com/kazeburo/mapstructure v1.4.1-0.20201203072126-37c8c6bbc6a6/go.mod h1:XP5hNSFMAHhhS3CpW2HOdXUebdRO6HnQ3q6ivjrpwYw=
 github.com/mackerelio/checkers v0.0.0-20200428063449-52cfb2c2c52c h1:gTJ7KeXinv4dbCCh5zXV7clWNjk0ESazARKhm87U0NE=
