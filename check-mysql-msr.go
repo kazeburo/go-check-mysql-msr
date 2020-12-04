@@ -26,12 +26,10 @@ type opts struct {
 }
 
 type slave struct {
-	IORunning     bool    `mysqlvar:"Slave_IO_Running"`
-	SQLRunning    bool    `mysqlvar:"Slave_SQL_Running"`
-	IORunningStr  string  `mysqlvar:"Slave_IO_Running"`
-	SQLRunningStr string  `mysqlvar:"Slave_SQL_Running"`
-	ChannelName   *string `mysqlvar:"Channel_Name"`
-	Behind        int64   `mysqlvar:"Seconds_Behind_Master"`
+	IORunning   mysqlflags.Bool `mysqlvar:"Slave_IO_Running"`
+	SQLRunning  mysqlflags.Bool `mysqlvar:"Slave_SQL_Running"`
+	ChannelName *string         `mysqlvar:"Channel_Name"`
+	Behind      int64           `mysqlvar:"Seconds_Behind_Master"`
 }
 
 func main() {
@@ -105,7 +103,7 @@ func checkMsr() *checkers.Checker {
 
 	for _, slave := range slaves {
 		status := checkers.OK
-		if !slave.IORunning || !slave.SQLRunning {
+		if !slave.IORunning.True() || !slave.SQLRunning.True() {
 			status = checkers.CRITICAL
 		}
 		if opts.Crit > 0 && slave.Behind > opts.Crit {
@@ -118,7 +116,7 @@ func checkMsr() *checkers.Checker {
 			*slave.ChannelName = "-"
 		}
 
-		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", *slave.ChannelName, slave.IORunningStr, slave.SQLRunningStr, slave.Behind)
+		msg := fmt.Sprintf("%s=io:%s,sql:%s,behind:%d", *slave.ChannelName, slave.IORunning.String(), slave.SQLRunning.String(), slave.Behind)
 		switch status {
 		case checkers.OK:
 			okStatuses = append(okStatuses, msg)
