@@ -103,7 +103,7 @@ func checkMsr() *checkers.Checker {
 
 	for _, slave := range slaves {
 		status := checkers.OK
-		if !slave.IORunning.True() || !slave.SQLRunning.True() {
+		if !slave.IORunning.Yes() || !slave.SQLRunning.Yes() {
 			status = checkers.CRITICAL
 		}
 		if opts.Crit > 0 && slave.Behind > opts.Crit {
